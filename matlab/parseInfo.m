@@ -1,4 +1,13 @@
-fileInfo = fopen('../data/movie_info.txt', 'r', 'n', 'UTF-8');
+function movies = parseInfo(type)
+if isequal(type,'train')
+    fileInfo = fopen('../data/movie_info.txt', 'r', 'n', 'UTF-8');
+elseif isequal(type,'predict')
+    fileInfo = fopen('../data/coming.txt', 'r', 'n', 'UTF-8');
+else
+    disp('type: train or predict');
+    return;
+end;
+%fileInfo = fopen('../data/movie_info.txt', 'r', 'n', 'UTF-8');
 tline = fgetl(fileInfo);
 splits = strread(tline, '%s', 'delimiter', '\t');
 movie.id = splits(1,1);
@@ -39,19 +48,21 @@ while ischar(tline)
     movies = [movies, movie];
     tline = fgetl(fileInfo);
 end
-fileBox = fopen('../data/boxoffice.txt', 'r', 'n', 'UTF-8');
-tline = fgetl(fileBox);
-
-while ischar(tline)
-    splits = strread(tline, '%s', 'delimiter', '\t');
-    for i = 1:length(movies)
-        if isequal(movies(i).id(1,1), splits(1,1))
-            movies(i).boxoffice = splits(2);
-            movies(i).boxoffice = [movies(i).boxoffice, splits(3)];
-            movies(i).boxoffice = [movies(i).boxoffice, splits(4)];
-            movies(i).boxoffice = [movies(i).boxoffice, splits(5)];
-        end
-    end
+if isequal(type,'train')
+    fileBox = fopen('../data/boxoffice.txt', 'r', 'n', 'UTF-8');
     tline = fgetl(fileBox);
+
+    while ischar(tline)
+        splits = strread(tline, '%s', 'delimiter', '\t');
+        for i = 1:length(movies)
+            if isequal(movies(i).id(1,1), splits(1,1))
+                movies(i).boxoffice = splits(2);
+                movies(i).boxoffice = [movies(i).boxoffice, splits(3)];
+                movies(i).boxoffice = [movies(i).boxoffice, splits(4)];
+                movies(i).boxoffice = [movies(i).boxoffice, splits(5)];
+            end
+        end
+        tline = fgetl(fileBox);
+    end
 end
 

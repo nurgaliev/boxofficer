@@ -1,0 +1,56 @@
+load data.mat
+
+goodcount = 0;
+
+results = [];
+while goodcount < 100
+    layer1 = uint8(rand*20)+5;
+    layer2 = uint8(rand*layer1)+1;
+    testtype(layer1, TypePosInt)
+    layer2
+    layers = [layer1 layer2];
+    layers
+    net = feedforwardnet(layers);
+    net.trainParam.max_fail=100;
+    net.trainParam.min_grad = 0;
+    net.trainParam.mu_max = 1.00e+20;
+    [net,tr] = train(net,trainInput,bon);
+    if tr.best_tperf < 5 && tr.best_vperf < 5
+        goodcount = goodcount+1;
+        disp(goodcount);
+        category = net(predictInput);
+        category = uint8(category);
+        boxoffice = [];
+        for i = 1:length(category)
+            bo = 0;
+            switch category(i)
+                case 0
+                    bo = 100000*rand;
+                case 1
+                    bo = (500000 - 100000)*rand + 100000;
+                case 2
+                    bo = (1000000 - 500000)*rand + 500000;
+                case 3
+                    bo = (2000000 - 1000000)*rand + 1000000;
+                case 4
+                    bo = (5000000 - 2000000)*rand + 2000000;
+                case 5
+                     bo = (10000000 - 5000000)*rand + 5000000;
+                case 6
+                     bo = (20000000 - 10000000)*rand + 10000000;
+                case 7
+                     bo = (30000000 - 20000000)*rand + 20000000;
+                case 8
+                     bo = (50000000 - 30000000)*rand + 30000000;
+                case 9
+                     bo = (100000000 - 50000000)*rand + 50000000;
+                case 10
+                     bo = 112345678;
+                otherwise
+                    bo = -1;
+            end
+            boxoffice = [boxoffice, bo];
+        end
+        results = [results boxoffice'];
+    end
+end

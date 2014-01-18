@@ -1,4 +1,4 @@
-function [ stats, params, ids, bos, matrix, matrix2 ] = prepareData( movies )
+function [ stats, params, ids, bos, bon, fundamental, stars, starValue ] = prepareTrain( movies )
     stats = [];
     actors2 = [];
     directors2 = [];
@@ -12,8 +12,8 @@ function [ stats, params, ids, bos, matrix, matrix2 ] = prepareData( movies )
     bod = [];
     bog = [];
     bor = [];
-
     bos = [];
+
 for i = 1:length(movies)
     if size(movies(i).boxoffice,2) ~= 4 || isequal(movies(i).boxoffice{1},'0')
         continue;
@@ -56,7 +56,6 @@ for i = 1:length(movies)
     end    
     v = [v bo];
     bos = [bos bo];
-    size(v)
     stats = [stats; v];
 end
 
@@ -65,14 +64,12 @@ for i = 1:length(movies)
     if size(movies(i).boxoffice,2) ~= 4 || isequal(movies(i).boxoffice{1},'0')
         continue;
     end
-    add = 1;
+    
     count = count + 1;
     for j = 1:length(movies(i).actor)
+        add = 1;
         for k = 1:length(actors2)
         	if (isequal(movies(i).actor(j), actors2(k)))
-               % if (isequal(movies(i).actor{j},'ï¿½ï¿½ï¿½Ï´ï¿½'))
-                %    disp(bos(count));
-               % end
                 add = 0;
                 ca(k) = ca(k) + 1;
                 boa(k) = boa(k) + bos(count);
@@ -86,8 +83,9 @@ for i = 1:length(movies)
         end
     end
 
-    add = 1;
+   
     for j = 1:length(movies(i).director)
+         add = 1;
         for k = 1:length(directors2)
             if (isequal(movies(i).director(j), directors2(k)))
                 add = 0;
@@ -103,10 +101,14 @@ for i = 1:length(movies)
         end
     end
 
-    add = 1;
+    
     for j = 1:length(movies(i).genre)
+        add = 1;
+        %if isequal(movies(i).genre{j},'Ææ»Ã')
+        %    disp(movies(i).name);
+        %end
         for k = 1:length(genres2)
-            if (isequal(movies(i).genre(j), genres2(k)))
+            if (isequal(movies(i).genre{j}, genres2{k}))
                 add = 0;
                 cg(k) = cg(k) + 1;
                 bog(k) = bog(k) + bos(count);
@@ -120,8 +122,9 @@ for i = 1:length(movies)
         end
     end
     
-    add = 1;
+    
     for j = 1:length(movies(i).region)
+        add = 1;
         for k = 1:length(regions2)
             if (isequal(movies(i).region(j), regions2(k)))
                 add = 0;
@@ -165,11 +168,12 @@ for i = 1:length(regions2)
     end
 end
 
-params =[regions; genres; directors; actors];
-matrix = [];
-matrix2 = [];
+params ={regions; genres; directors; actors};
+
+fundamental = [];
+starValue = [];
+stars = [];
 v = [];
-v2 = [];
 ids = [];
 for i = 1:length(movies)
     if size(movies(i).boxoffice,2) ~= 4 || isequal(movies(i).boxoffice{1},'0')
@@ -182,14 +186,12 @@ for i = 1:length(movies)
         for k = 1:length(movies(i).region)
             if isequal(movies(i).region(k), regions(j))
                 v = [v 1];
-                v2 = [v2 1];
                 flag = 1;
                 break;
             end
         end
         if (flag == 0)
             v = [v 0];
-            v2 = [v2 0];
         end
     end
 
@@ -198,17 +200,16 @@ for i = 1:length(movies)
         for k = 1:length(movies(i).genre)
             if (isequal(movies(i).genre(k), genres(j)))
                 v = [v 1];
-                v2 = [v2 1];
                 flag = 1;
                 break;
             end
         end
         if (flag == 0)
             v = [v 0];
-            v2 = [v2 0];
         end
     end
-    
+    fundamental = [fundamental; v];
+    v = [];
     starNum = 0;
     starBO = 0;
     for j = 1:length(directors(:,1))
@@ -242,11 +243,57 @@ for i = 1:length(movies)
             v = [v 0];
         end
     end
-    v2 = [v2 starBO];
-    matrix = [matrix; v];
-    matrix2 = [matrix2; v2];
+    stars = [stars; v];
+    starValue = [starValue; starBO];
     v=[]; 
-    v2=[];
+end
+
+%norm starValue
+range = max(starValue) - min(starValue);
+starValue = (starValue - min(starValue))/range*20;
+starValue = uint8(starValue);
+sv = starValue;
+starValue = [];
+for i = 1:length(sv)
+    v = [];
+    for j = 1:20
+        if sv(i) == j-1
+            v = [v, 1];
+        else
+            v = [v, 0];
+        end
+    end
+    starValue = [starValue; v];
+end
+
+%norm bos
+bon = [];
+for i = 1:length(bos)
+    v = -1;
+    if bos(i) <= 100000
+        v = 0;
+    elseif bos(i) > 100000 && bos(i) <= 500000
+        v = 1;
+    elseif bos(i) > 500000 && bos(i) <= 1000000
+        v = 2;
+    elseif bos(i) > 1000000 && bos(i) <= 2000000
+        v = 3;
+    elseif bos(i) > 2000000 && bos(i) <= 5000000
+        v = 4;
+    elseif bos(i) > 5000000 && bos(i) <= 10000000
+        v = 5;
+    elseif bos(i) >  10000000 && bos(i) <= 20000000
+        v = 6;
+    elseif bos(i) > 20000000 && bos(i) <= 30000000
+        v = 7;
+    elseif bos(i) > 30000000 && bos(i) <= 50000000
+        v = 8;
+    elseif bos(i) > 50000000 && bos(i) <= 100000000
+        v = 9;
+    elseif bos(i) >= 100000000
+        v = 10;
+    end
+    bon = [bon v];
 end
 
 
